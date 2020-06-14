@@ -1,9 +1,10 @@
 import requests
-from flask import  json
+from flask import json
 from flask_ask import logger
 
-class Product():
-    '''
+
+class Product:
+    """
     Object model for inSkillProducts and methods to access products.
     
     {"inSkillProducts":[
@@ -17,36 +18,35 @@ class Product():
     "nextToken":null,
     "truncated":false}
 
-    '''
+    """
 
     def __init__(self, apiAccessToken):
         self.token = apiAccessToken
         self.product_list = self.query()
 
-
     def query(self):
         # Information required to invoke the API is available in the session
         apiEndpoint = "https://api.amazonalexa.com"
-        apiPath     = "/v1/users/~current/skills/~current/inSkillProducts"
-        token       = "bearer " + self.token
-        language    = "en-US" #self.event.request.locale
+        apiPath = "/v1/users/~current/skills/~current/inSkillProducts"
+        token = "bearer " + self.token
+        language = "en-US"  # self.event.request.locale
 
         url = apiEndpoint + apiPath
         headers = {
-                "Content-Type"      : 'application/json',
-                "Accept-Language"   : language,
-                "Authorization"     : token
-            }
-        #Call the API
+            "Content-Type": "application/json",
+            "Accept-Language": language,
+            "Authorization": token,
+        }
+        # Call the API
         res = requests.get(url, headers=headers)
-        logger.info('PRODUCTS:' + '*' * 80)
+        logger.info("PRODUCTS:" + "*" * 80)
         logger.info(res.status_code)
         logger.info(res.text)
         if res.status_code == 200:
             data = json.loads(res.text)
-            return data['inSkillProducts']
+            return data["inSkillProducts"]
         else:
-            return None        
+            return None
 
     def list(self):
         """ return list of purchasable and not entitled products"""
@@ -58,22 +58,21 @@ class Product():
 
     def purchasable(self, product):
         """ return True if purchasable product"""
-        return 'PURCHASABLE' == product['purchasable']
-    
+        return "PURCHASABLE" == product["purchasable"]
+
     def entitled(self, product):
         """ return True if entitled product"""
-        return 'ENTITLED' == product['entitled']
-        
+        return "ENTITLED" == product["entitled"]
 
     def productId(self, name):
         print(self.product_list)
         for prod in self.product_list:
-            if name == prod['name'].lower():
-                return prod['productId']
+            if name == prod["name"].lower():
+                return prod["productId"]
         return None
 
     def productName(self, id):
         for prod in self.product_list:
-            if id == prod['productId']:
-                return prod['name']
+            if id == prod["productId"]:
+                return prod["name"]
         return None

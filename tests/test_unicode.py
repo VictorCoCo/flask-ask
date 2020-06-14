@@ -11,12 +11,12 @@ class UnicodeTests(unittest.TestCase):
     def test_unicode_statements(self):
         """ Test unicode statement responses """
         stmt = statement(self.unicode_string)
-        speech = stmt._response['outputSpeech']['text']
+        speech = stmt._response["outputSpeech"]["text"]
         print(speech)
         self.assertTrue(self.unicode_string in speech)
 
     def test_unicode_questions(self):
         """ Test unicode in question responses """
         q = question(self.unicode_string)
-        speech = q._response['outputSpeech']['text']
+        speech = q._response["outputSpeech"]["text"]
         self.assertTrue(self.unicode_string in speech)

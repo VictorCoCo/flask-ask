@@ -10,7 +10,8 @@ from OpenSSL import crypto
 from . import logger
 
 
-class VerificationError(Exception): pass
+class VerificationError(Exception):
+    pass
 
 
 def load_certificate(cert_url):
@@ -26,7 +27,7 @@ def load_certificate(cert_url):
 def verify_signature(cert, signature, signed_data):
     try:
         signature = base64.b64decode(signature)
-        crypto.verify(cert, signature, signed_data, 'sha1')
+        crypto.verify(cert, signature, signed_data, "sha1")
     except crypto.Error as e:
         raise VerificationError(e)
 
@@ -44,7 +45,7 @@ def verify_application_id(candidate, records):
 
 def _valid_certificate_url(cert_url):
     parsed_url = urlparse(cert_url)
-    if parsed_url.scheme == 'https':
+    if parsed_url.scheme == "https":
         if parsed_url.hostname == "s3.amazonaws.com":
             if posixpath.normpath(parsed_url.path).startswith("/echo.api/"):
                 return True
@@ -52,18 +53,18 @@ def _valid_certificate_url(cert_url):
 
 
 def _valid_certificate(cert):
-    not_after = cert.get_notAfter().decode('utf-8')
-    not_after = datetime.strptime(not_after, '%Y%m%d%H%M%SZ')
+    not_after = cert.get_notAfter().decode("utf-8")
+    not_after = datetime.strptime(not_after, "%Y%m%d%H%M%SZ")
     if datetime.utcnow() >= not_after:
         return False
     found = False
     for i in range(0, cert.get_extension_count()):
         extension = cert.get_extension(i)
-        short_name = extension.get_short_name().decode('utf-8')
+        short_name = extension.get_short_name().decode("utf-8")
         value = str(extension)
-        if 'subjectAltName' == short_name and 'DNS:echo-api.amazon.com' == value:
-                found = True
-                break
+        if "subjectAltName" == short_name and "DNS:echo-api.amazon.com" == value:
+            found = True
+            break
     if not found:
         return False
     return True

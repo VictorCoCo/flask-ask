@@ -1,6 +1,6 @@
 import logging
 
-logger = logging.getLogger('flask_ask')
+logger = logging.getLogger("flask_ask")
 logger.addHandler(logging.StreamHandler())
 if logger.level == logging.NOTSET:
     logger.setLevel(logging.WARN)
@@ -13,7 +13,7 @@ from .core import (
     version,
     context,
     current_stream,
-    convert_errors
+    convert_errors,
 )
 
 from .models import (
@@ -26,5 +26,5 @@ from .models import (
     confirm_intent,
     buy,
     upsell,
-    refund
+    refund,
 )

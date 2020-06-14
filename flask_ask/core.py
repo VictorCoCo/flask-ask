@@ -25,18 +25,18 @@ def find_ask():
     Note: This only supports returning a reference to the first instance
     of Ask found.
     """
-    if hasattr(current_app, 'ask'):
-        return getattr(current_app, 'ask')
+    if hasattr(current_app, "ask"):
+        return getattr(current_app, "ask")
     else:
-        if hasattr(current_app, 'blueprints'):
-            blueprints = getattr(current_app, 'blueprints')
+        if hasattr(current_app, "blueprints"):
+            blueprints = getattr(current_app, "blueprints")
             for blueprint_name in blueprints:
-                if hasattr(blueprints[blueprint_name], 'ask'):
-                    return getattr(blueprints[blueprint_name], 'ask')
+                if hasattr(blueprints[blueprint_name], "ask"):
+                    return getattr(blueprints[blueprint_name], "ask")
 
 
 def dbgdump(obj, default=None, cls=None):
-    if current_app.config.get('ASK_PRETTY_DEBUG_LOGS', False):
+    if current_app.config.get("ASK_PRETTY_DEBUG_LOGS", False):
         indent = 2
     else:
         indent = None
@@ -55,7 +55,7 @@ stream_cache = LocalProxy(lambda: find_ask().stream_cache)
 from . import models
 
 
-_converters = {'date': to_date, 'time': to_time, 'timedelta': to_timedelta}
+_converters = {"date": to_date, "time": to_time, "timedelta": to_timedelta}
 
 
 class Ask(object):
@@ -75,7 +75,14 @@ class Ask(object):
         path {str} -- path to templates yaml file for VUI dialog (default: {'templates.yaml'})
     """
 
-    def __init__(self, app=None, route=None, blueprint=None, stream_cache=None, path='templates.yaml'):
+    def __init__(
+        self,
+        app=None,
+        route=None,
+        blueprint=None,
+        stream_cache=None,
+        path="templates.yaml",
+    ):
         self.app = app
         self._route = route
         self._intent_view_funcs = {}
@@ -98,7 +105,7 @@ class Ask(object):
         else:
             self.stream_cache = stream_cache
 
-    def init_app(self, app, path='templates.yaml'):
+    def init_app(self, app, path="templates.yaml"):
         """Initializes Ask app by setting configuration variables, loading templates, and maps Ask route to a flask view.
 
         The Ask instance is given the following configuration variables by calling on Flask's configuration:
@@ -135,13 +142,13 @@ class Ask(object):
             raise TypeError("route is a required argument when app is not None")
 
         self.app = app
-        
+
         app.ask = self
 
-        app.add_url_rule(self._route, view_func=self._flask_view_func, methods=['POST'])
+        app.add_url_rule(self._route, view_func=self._flask_view_func, methods=["POST"])
         app.jinja_loader = ChoiceLoader([app.jinja_loader, YamlLoader(app, path)])
 
-    def init_blueprint(self, blueprint, path='templates.yaml'):
+    def init_blueprint(self, blueprint, path="templates.yaml"):
         """Initialize a Flask Blueprint, similar to init_app, but without the access
         to the application config.
 
@@ -159,20 +166,20 @@ class Ask(object):
         # concats the rule string, so we should set to an empty string to allow
         # Blueprint('blueprint_api', __name__, url_prefix="/ask") to result in
         # exposing the rule at "/ask" and not "/ask/".
-        blueprint.add_url_rule("", view_func=self._flask_view_func, methods=['POST'])
+        blueprint.add_url_rule("", view_func=self._flask_view_func, methods=["POST"])
         blueprint.jinja_loader = ChoiceLoader([YamlLoader(blueprint, path)])
 
     @property
     def ask_verify_requests(self):
-        return current_app.config.get('ASK_VERIFY_REQUESTS', True)
+        return current_app.config.get("ASK_VERIFY_REQUESTS", True)
 
     @property
     def ask_verify_timestamp_debug(self):
-        return current_app.config.get('ASK_VERIFY_TIMESTAMP_DEBUG', False)
+        return current_app.config.get("ASK_VERIFY_TIMESTAMP_DEBUG", False)
 
     @property
     def ask_application_id(self):
-        return current_app.config.get('ASK_APPLICATION_ID', None)
+        return current_app.config.get("ASK_APPLICATION_ID", None)
 
     def on_session_started(self, f):
         """Decorator to call wrapped function upon starting a session.
@@ -209,6 +216,7 @@ class Ask(object):
         @wraps(f)
         def wrapper(*args, **kw):
             self._flask_view_func(*args, **kw)
+
         return f
 
     def session_ended(self, f):
@@ -229,6 +237,7 @@ class Ask(object):
         @wraps(f)
         def wrapper(*args, **kw):
             self._flask_view_func(*args, **kw)
+
         return f
 
     def intent(self, intent_name, mapping={}, convert={}, default={}):
@@ -255,6 +264,7 @@ class Ask(object):
                 returns no corresponding slot, or a slot with an empty value
                 default: {}
         """
+
         def decorator(f):
             self._intent_view_funcs[intent_name] = f
             self._intent_mappings[intent_name] = mapping
@@ -264,7 +274,9 @@ class Ask(object):
             @wraps(f)
             def wrapper(*args, **kw):
                 self._flask_view_func(*args, **kw)
+
             return f
+
         return decorator
 
     def default_intent(self, f):
@@ -274,6 +286,7 @@ class Ask(object):
         @wraps(f)
         def wrapper(*args, **kw):
             self._flask_view_func(*args, **kw)
+
         return f
 
     def display_element_selected(self, f):
@@ -294,10 +307,20 @@ class Ask(object):
         @wraps(f)
         def wrapper(*args, **kw):
             self._flask_view_func(*args, **kw)
+
         return f
 
-
-    def on_purchase_completed(self, mapping={'payload': 'payload','name':'name','status':'status','token':'token'}, convert={}, default={}):
+    def on_purchase_completed(
+        self,
+        mapping={
+            "payload": "payload",
+            "name": "name",
+            "status": "status",
+            "token": "token",
+        },
+        convert={},
+        default={},
+    ):
         """Decorator routes an Connections.Response  to the wrapped function.
 
         Request is sent when Alexa completes the purchase flow. 
@@ -316,19 +339,24 @@ class Ask(object):
             logger.info(token)
             
         """
+
         def decorator(f):
-            self._intent_view_funcs['Connections.Response'] = f
-            self._intent_mappings['Connections.Response'] = mapping
-            self._intent_converts['Connections.Response'] = convert
-            self._intent_defaults['Connections.Response'] = default
+            self._intent_view_funcs["Connections.Response"] = f
+            self._intent_mappings["Connections.Response"] = mapping
+            self._intent_converts["Connections.Response"] = convert
+            self._intent_defaults["Connections.Response"] = default
+
             @wraps(f)
             def wrapper(*args, **kwargs):
                 self._flask_view_func(*args, **kwargs)
+
             return f
+
         return decorator
 
-
-    def on_playback_started(self, mapping={'offset': 'offsetInMilliseconds'}, convert={}, default={}):
+    def on_playback_started(
+        self, mapping={"offset": "offsetInMilliseconds"}, convert={}, default={}
+    ):
         """Decorator routes an AudioPlayer.PlaybackStarted Request to the wrapped function.
 
         Request sent when Alexa begins playing the audio stream previously sent in a Play directive.
@@ -349,19 +377,24 @@ class Ask(object):
             logger.info('stream has token {}'.format(token))
             logger.info('Current position within the stream is {} ms'.format(offset))
         """
+
         def decorator(f):
-            self._intent_view_funcs['AudioPlayer.PlaybackStarted'] = f
-            self._intent_mappings['AudioPlayer.PlaybackStarted'] = mapping
-            self._intent_converts['AudioPlayer.PlaybackStarted'] = convert
-            self._intent_defaults['AudioPlayer.PlaybackStarted'] = default
+            self._intent_view_funcs["AudioPlayer.PlaybackStarted"] = f
+            self._intent_mappings["AudioPlayer.PlaybackStarted"] = mapping
+            self._intent_converts["AudioPlayer.PlaybackStarted"] = convert
+            self._intent_defaults["AudioPlayer.PlaybackStarted"] = default
 
             @wraps(f)
             def wrapper(*args, **kwargs):
                 self._flask_view_func(*args, **kwargs)
+
             return f
+
         return decorator
 
-    def on_playback_finished(self, mapping={'offset': 'offsetInMilliseconds'}, convert={}, default={}):
+    def on_playback_finished(
+        self, mapping={"offset": "offsetInMilliseconds"}, convert={}, default={}
+    ):
         """Decorator routes an AudioPlayer.PlaybackFinished Request to the wrapped function.
 
         This type of request is sent when the stream Alexa is playing comes to an end on its own.
@@ -380,19 +413,24 @@ class Ask(object):
 
         Audioplayer Requests do not include the stream URL, it must be accessed from current_stream.url
         """
+
         def decorator(f):
-            self._intent_view_funcs['AudioPlayer.PlaybackFinished'] = f
-            self._intent_mappings['AudioPlayer.PlaybackFinished'] = mapping
-            self._intent_converts['AudioPlayer.PlaybackFinished'] = convert
-            self._intent_defaults['AudioPlayer.PlaybackFinished'] = default
+            self._intent_view_funcs["AudioPlayer.PlaybackFinished"] = f
+            self._intent_mappings["AudioPlayer.PlaybackFinished"] = mapping
+            self._intent_converts["AudioPlayer.PlaybackFinished"] = convert
+            self._intent_defaults["AudioPlayer.PlaybackFinished"] = default
 
             @wraps(f)
             def wrapper(*args, **kwargs):
                 self._flask_view_func(*args, **kwargs)
+
             return f
+
         return decorator
 
-    def on_playback_stopped(self, mapping={'offset': 'offsetInMilliseconds'}, convert={}, default={}):
+    def on_playback_stopped(
+        self, mapping={"offset": "offsetInMilliseconds"}, convert={}, default={}
+    ):
         """Decorator routes an AudioPlayer.PlaybackStopped Request to the wrapped function.
 
         Sent when Alexa stops playing an audio stream in response to one of the following:
@@ -418,19 +456,24 @@ class Ask(object):
 
         Audioplayer Requests do not include the stream URL, it must be accessed from current_stream.url
         """
+
         def decorator(f):
-            self._intent_view_funcs['AudioPlayer.PlaybackStopped'] = f
-            self._intent_mappings['AudioPlayer.PlaybackStopped'] = mapping
-            self._intent_converts['AudioPlayer.PlaybackStopped'] = convert
-            self._intent_defaults['AudioPlayer.PlaybackStopped'] = default
+            self._intent_view_funcs["AudioPlayer.PlaybackStopped"] = f
+            self._intent_mappings["AudioPlayer.PlaybackStopped"] = mapping
+            self._intent_converts["AudioPlayer.PlaybackStopped"] = convert
+            self._intent_defaults["AudioPlayer.PlaybackStopped"] = default
 
             @wraps(f)
             def wrapper(*args, **kwargs):
                 self._flask_view_func(*args, **kwargs)
+
             return f
+
         return decorator
 
-    def on_playback_nearly_finished(self, mapping={'offset': 'offsetInMilliseconds'}, convert={}, default={}):
+    def on_playback_nearly_finished(
+        self, mapping={"offset": "offsetInMilliseconds"}, convert={}, default={}
+    ):
         """Decorator routes an AudioPlayer.PlaybackNearlyFinished Request to the wrapped function.
 
         This AudioPlayer Request sent when the device is ready to receive a new stream.
@@ -473,16 +516,19 @@ class Ask(object):
             _infodump('Stream at {} ms when Playback Request sent'.format(pos))
             _infodump('Stream holds the token {}'.format(stream_token))
         """
+
         def decorator(f):
-            self._intent_view_funcs['AudioPlayer.PlaybackNearlyFinished'] = f
-            self._intent_mappings['AudioPlayer.PlaybackNearlyFinished'] = mapping
-            self._intent_converts['AudioPlayer.PlaybackNearlyFinished'] = convert
-            self._intent_defaults['AudioPlayer.PlaybackNearlyFinished'] = default
+            self._intent_view_funcs["AudioPlayer.PlaybackNearlyFinished"] = f
+            self._intent_mappings["AudioPlayer.PlaybackNearlyFinished"] = mapping
+            self._intent_converts["AudioPlayer.PlaybackNearlyFinished"] = convert
+            self._intent_defaults["AudioPlayer.PlaybackNearlyFinished"] = default
 
             @wraps(f)
             def wrapper(*args, **kwargs):
                 self._flask_view_func(*args, **kwargs)
+
             return f
+
         return decorator
 
     def on_playback_failed(self, mapping={}, convert={}, default={}):
@@ -510,21 +556,24 @@ class Ask(object):
 
                     playerActivity - player state when the error occurred
         """
+
         def decorator(f):
-            self._intent_view_funcs['AudioPlayer.PlaybackFailed'] = f
-            self._intent_mappings['AudioPlayer.PlaybackFailed'] = mapping
-            self._intent_converts['AudioPlayer.PlaybackFailed'] = convert
-            self._intent_defaults['AudioPlayer.PlaybackFailed'] = default
+            self._intent_view_funcs["AudioPlayer.PlaybackFailed"] = f
+            self._intent_mappings["AudioPlayer.PlaybackFailed"] = mapping
+            self._intent_converts["AudioPlayer.PlaybackFailed"] = convert
+            self._intent_defaults["AudioPlayer.PlaybackFailed"] = default
 
             @wraps(f)
             def wrapper(*args, **kwargs):
                 self._flask_view_func(*args, **kwargs)
+
             return f
+
         return decorator
 
     @property
     def request(self):
-        return getattr(_app_ctx_stack.top, '_ask_request', None)
+        return getattr(_app_ctx_stack.top, "_ask_request", None)
 
     @request.setter
     def request(self, value):
@@ -532,7 +581,7 @@ class Ask(object):
 
     @property
     def session(self):
-        return getattr(_app_ctx_stack.top, '_ask_session', models._Field())
+        return getattr(_app_ctx_stack.top, "_ask_session", models._Field())
 
     @session.setter
     def session(self, value):
@@ -540,7 +589,7 @@ class Ask(object):
 
     @property
     def version(self):
-        return getattr(_app_ctx_stack.top, '_ask_version', None)
+        return getattr(_app_ctx_stack.top, "_ask_version", None)
 
     @version.setter
     def version(self, value):
@@ -548,7 +597,7 @@ class Ask(object):
 
     @property
     def context(self):
-        return getattr(_app_ctx_stack.top, '_ask_context', None)
+        return getattr(_app_ctx_stack.top, "_ask_context", None)
 
     @context.setter
     def context(self, value):
@@ -556,7 +605,7 @@ class Ask(object):
 
     @property
     def convert_errors(self):
-        return getattr(_app_ctx_stack.top, '_ask_convert_errors', None)
+        return getattr(_app_ctx_stack.top, "_ask_convert_errors", None)
 
     @convert_errors.setter
     def convert_errors(self, value):
@@ -564,7 +613,7 @@ class Ask(object):
 
     @property
     def current_stream(self):
-        #return getattr(_app_ctx_stack.top, '_ask_current_stream', models._Field())
+        # return getattr(_app_ctx_stack.top, '_ask_current_stream', models._Field())
         user = self._get_user()
         if user:
             stream = top_stream(self.stream_cache, user)
@@ -614,47 +663,49 @@ class Ask(object):
 
         # We are guaranteed to be called by AWS as a Lambda function does not
         # expose a public facing interface.
-        self.app.config['ASK_VERIFY_REQUESTS'] = False
+        self.app.config["ASK_VERIFY_REQUESTS"] = False
 
         # Convert an environment variable to a WSGI "bytes-as-unicode" string
-        enc, esc = sys.getfilesystemencoding(), 'surrogateescape'
+        enc, esc = sys.getfilesystemencoding(), "surrogateescape"
+
         def unicode_to_wsgi(u):
-            return u.encode(enc, esc).decode('iso-8859-1')
+            return u.encode(enc, esc).decode("iso-8859-1")
 
         # Create a WSGI-compatible environ that can be passed to the
         # application. It is loaded with the OS environment variables,
         # mandatory CGI-like variables, as well as the mandatory WSGI
         # variables.
         environ = {k: unicode_to_wsgi(v) for k, v in os.environ.items()}
-        environ['REQUEST_METHOD'] = 'POST'
-        environ['PATH_INFO'] = '/'
-        environ['SERVER_NAME'] = 'AWS-Lambda'
-        environ['SERVER_PORT'] = '80'
-        environ['SERVER_PROTOCOL'] = 'HTTP/1.0'
-        environ['wsgi.version'] = (1, 0)
-        environ['wsgi.url_scheme'] = 'http'
-        environ['wsgi.errors'] = sys.stderr
-        environ['wsgi.multithread'] = False
-        environ['wsgi.multiprocess'] = False
-        environ['wsgi.run_once'] = True
+        environ["REQUEST_METHOD"] = "POST"
+        environ["PATH_INFO"] = "/"
+        environ["SERVER_NAME"] = "AWS-Lambda"
+        environ["SERVER_PORT"] = "80"
+        environ["SERVER_PROTOCOL"] = "HTTP/1.0"
+        environ["wsgi.version"] = (1, 0)
+        environ["wsgi.url_scheme"] = "http"
+        environ["wsgi.errors"] = sys.stderr
+        environ["wsgi.multithread"] = False
+        environ["wsgi.multiprocess"] = False
+        environ["wsgi.run_once"] = True
 
         # Convert the event provided by the AWS Lambda handler to a JSON
         # string that can be read as the body of a HTTP POST request.
         body = json.dumps(event)
-        environ['CONTENT_TYPE'] = 'application/json'
-        environ['CONTENT_LENGTH'] = len(body)
-        
+        environ["CONTENT_TYPE"] = "application/json"
+        environ["CONTENT_LENGTH"] = len(body)
+
         PY3 = sys.version_info[0] == 3
-        
+
         if PY3:
-            environ['wsgi.input'] = io.StringIO(body)
+            environ["wsgi.input"] = io.StringIO(body)
         else:
-            environ['wsgi.input'] = io.BytesIO(body)
+            environ["wsgi.input"] = io.BytesIO(body)
 
         # Start response is a required callback that must be passed when
         # the application is invoked. It is used to set HTTP status and
         # headers. Read the WSGI spec for details (PEP3333).
         headers = []
+
         def start_response(status, response_headers, _exc_info=None):
             headers[:] = [status, response_headers]
 
@@ -669,7 +720,9 @@ class Ask(object):
 
             output = b"".join(result)
             if not headers[0].startswith("2"):
-                raise AssertionError("Non-2xx from app: hdrs={}, body={}".format(headers, output))
+                raise AssertionError(
+                    "Non-2xx from app: hdrs={}, body={}".format(headers, output)
+                )
 
             # The Lambda handler expects a Python object that can be
             # serialized as JSON, so we need to take the already serialized
@@ -679,23 +732,21 @@ class Ask(object):
         finally:
             # Per the WSGI spec, we need to invoke the close method if it
             # is implemented on the result object.
-            if hasattr(result, 'close'):
+            if hasattr(result, "close"):
                 result.close()
-
 
     def _get_user(self):
         if self.context:
-            return self.context.get('System', {}).get('user', {}).get('userId')
+            return self.context.get("System", {}).get("user", {}).get("userId")
         return None
-
 
     def _alexa_request(self, verify=True):
         raw_body = flask_request.data
         alexa_request_payload = json.loads(raw_body)
 
         if verify:
-            cert_url = flask_request.headers['Signaturecertchainurl']
-            signature = flask_request.headers['Signature']
+            cert_url = flask_request.headers["Signaturecertchainurl"]
+            signature = flask_request.headers["Signature"]
 
             # load certificate - this verifies a the certificate url and format under the hood
             cert = verifier.load_certificate(cert_url)
@@ -703,7 +754,7 @@ class Ask(object):
             verifier.verify_signature(cert, signature, raw_body)
 
             # verify timestamp
-            raw_timestamp = alexa_request_payload.get('request', {}).get('timestamp')
+            raw_timestamp = alexa_request_payload.get("request", {}).get("timestamp")
             timestamp = self._parse_timestamp(raw_timestamp)
 
             if not current_app.debug or self.ask_verify_timestamp_debug:
@@ -711,10 +762,13 @@ class Ask(object):
 
             # verify application id
             try:
-                application_id = alexa_request_payload['session']['application']['applicationId']
+                application_id = alexa_request_payload["session"]["application"][
+                    "applicationId"
+                ]
             except KeyError:
-                application_id = alexa_request_payload['context'][
-                    'System']['application']['applicationId']
+                application_id = alexa_request_payload["context"]["System"][
+                    "application"
+                ]["applicationId"]
             if self.ask_application_id is not None:
                 verifier.verify_application_id(application_id, self.ask_application_id)
 
@@ -735,14 +789,17 @@ class Ask(object):
                     return datetime.utcfromtimestamp(timestamp)
                 except:
                     # relax the timestamp a bit in case it was sent in millis
-                    return datetime.utcfromtimestamp(timestamp/1000)
+                    return datetime.utcfromtimestamp(timestamp / 1000)
 
-        raise ValueError('Invalid timestamp value! Cannot parse from either ISO8601 string or UTC timestamp.')
-
+        raise ValueError(
+            "Invalid timestamp value! Cannot parse from either ISO8601 string or UTC timestamp."
+        )
 
     def _update_stream(self):
         fresh_stream = models._Field()
-        fresh_stream.__dict__.update(self.current_stream.__dict__)  # keeps url attribute after stopping stream
+        fresh_stream.__dict__.update(
+            self.current_stream.__dict__
+        )  # keeps url attribute after stopping stream
         fresh_stream.__dict__.update(self._from_directive())
 
         context_info = self._from_context()
@@ -753,12 +810,12 @@ class Ask(object):
         dbgdump(current_stream.__dict__)
 
     def _from_context(self):
-        return getattr(self.context, 'AudioPlayer', {})
+        return getattr(self.context, "AudioPlayer", {})
 
     def _from_directive(self):
         from_buffer = top_stream(self.stream_cache, self._get_user())
         if from_buffer:
-            if self.request.intent and 'PauseIntent' in self.request.intent.name:
+            if self.request.intent and "PauseIntent" in self.request.intent.name:
                 return {}
             return from_buffer
         return {}
@@ -770,8 +827,10 @@ class Ask(object):
 
         self.request = request_body.request
         self.version = request_body.version
-        self.context = getattr(request_body, 'context', models._Field())
-        self.session = getattr(request_body, 'session', self.session) # to keep old session.attributes through AudioRequests
+        self.context = getattr(request_body, "context", models._Field())
+        self.session = getattr(
+            request_body, "session", self.session
+        )  # to keep old session.attributes through AudioRequests
 
         if not self.session:
             self.session = models._Field()
@@ -795,22 +854,25 @@ class Ask(object):
         result = None
         request_type = self.request.type
 
-        if request_type == 'LaunchRequest' and self._launch_view_func:
+        if request_type == "LaunchRequest" and self._launch_view_func:
             result = self._launch_view_func()
-        elif request_type == 'SessionEndedRequest':
+        elif request_type == "SessionEndedRequest":
             if self._session_ended_view_func:
                 result = self._session_ended_view_func()
             else:
                 result = "{}", 200
-        elif request_type == 'IntentRequest' and self._intent_view_funcs:
+        elif request_type == "IntentRequest" and self._intent_view_funcs:
             result = self._map_intent_to_view_func(self.request.intent)()
-        elif request_type == 'Display.ElementSelected' and self._display_element_selected_func:
+        elif (
+            request_type == "Display.ElementSelected"
+            and self._display_element_selected_func
+        ):
             result = self._display_element_selected_func()
-        elif 'AudioPlayer' in request_type:
+        elif "AudioPlayer" in request_type:
             result = self._map_player_request_to_func(self.request.type)()
             # routes to on_playback funcs
             # user can also access state of content.AudioPlayer with current_stream
-        elif 'Connections.Response' in request_type:
+        elif "Connections.Response" in request_type:
             result = self._map_purchase_request_to_func(self.request.type)()
 
         if result is not None:
@@ -826,14 +888,18 @@ class Ask(object):
         elif self._default_intent_view_func is not None:
             view_func = self._default_intent_view_func
         else:
-            raise NotImplementedError('Intent "{}" not found and no default intent specified.'.format(intent.name))
+            raise NotImplementedError(
+                'Intent "{}" not found and no default intent specified.'.format(
+                    intent.name
+                )
+            )
 
         PY3 = sys.version_info[0] == 3
         if PY3:
             argspec = inspect.getfullargspec(view_func)
         else:
             argspec = inspect.getargspec(view_func)
-            
+
         arg_names = argspec.args
         arg_values = self._map_params_to_view_args(intent.name, arg_names)
 
@@ -852,32 +918,47 @@ class Ask(object):
 
     def _map_purchase_request_to_func(self, purchase_request_type):
         """Provides appropriate parameters to the on_purchase functions."""
-        
+
         if purchase_request_type in self._intent_view_funcs:
             view_func = self._intent_view_funcs[purchase_request_type]
         else:
-            raise NotImplementedError('Request type "{}" not found and no default view specified.'.format(purchase_request_type)) 
+            raise NotImplementedError(
+                'Request type "{}" not found and no default view specified.'.format(
+                    purchase_request_type
+                )
+            )
 
         argspec = inspect.getargspec(view_func)
         arg_names = argspec.args
         arg_values = self._map_params_to_view_args(purchase_request_type, arg_names)
 
-        print('_map_purchase_request_to_func', arg_names, arg_values, view_func, purchase_request_type)
+        print(
+            "_map_purchase_request_to_func",
+            arg_names,
+            arg_values,
+            view_func,
+            purchase_request_type,
+        )
         return partial(view_func, *arg_values)
 
     def _get_slot_value(self, slot_object):
         slot_name = slot_object.name
-        slot_value = getattr(slot_object, 'value', None)
-        resolutions = getattr(slot_object, 'resolutions', None)
+        slot_value = getattr(slot_object, "value", None)
+        resolutions = getattr(slot_object, "resolutions", None)
 
         if resolutions is not None:
-            resolutions_per_authority = getattr(resolutions, 'resolutionsPerAuthority', None)
-            if resolutions_per_authority is not None and len(resolutions_per_authority) > 0:
-                values = resolutions_per_authority[0].get('values', None)
+            resolutions_per_authority = getattr(
+                resolutions, "resolutionsPerAuthority", None
+            )
+            if (
+                resolutions_per_authority is not None
+                and len(resolutions_per_authority) > 0
+            ):
+                values = resolutions_per_authority[0].get("values", None)
                 if values is not None and len(values) > 0:
-                    value = values[0].get('value', None)
+                    value = values[0].get("value", None)
                     if value is not None:
-                        slot_value = value.get('name', slot_value)
+                        slot_value = value.get("name", slot_value)
 
         return slot_value
 
@@ -891,12 +972,14 @@ class Ask(object):
         convert_errors = {}
 
         request_data = {}
-        intent = getattr(self.request, 'intent', None)
+        intent = getattr(self.request, "intent", None)
         if intent is not None:
             if intent.slots is not None:
                 for slot_key in intent.slots.keys():
                     slot_object = getattr(intent.slots, slot_key)
-                    request_data[slot_object.name] = self._get_slot_value(slot_object=slot_object)
+                    request_data[slot_object.name] = self._get_slot_value(
+                        slot_object=slot_object
+                    )
 
         else:
             for param_name in self.request:
@@ -928,7 +1011,6 @@ class Ask(object):
 
 
 class YamlLoader(BaseLoader):
-
     def __init__(self, app, path):
         self.path = app.root_path + os.path.sep + path
         self.mapping = {}

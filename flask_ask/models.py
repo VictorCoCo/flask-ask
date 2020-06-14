@@ -35,7 +35,7 @@ class _Field(dict):
 
     def __getattr__(self, attr):
         # converts timestamp str to datetime.datetime object
-        if 'timestamp' in attr:
+        if "timestamp" in attr:
             return aniso8601.parse_datetime(self.get(attr))
         return self.get(attr)
 
@@ -44,138 +44,126 @@ class _Field(dict):
 
 
 class _Response(object):
-
     def __init__(self, speech):
         self._json_default = None
-        self._response = {
-            'outputSpeech': _output_speech(speech)
-        }
+        self._response = {"outputSpeech": _output_speech(speech)}
 
     def simple_card(self, title=None, content=None):
-        card = {
-            'type': 'Simple',
-            'title': title,
-            'content': content
-        }
-        self._response['card'] = card
+        card = {"type": "Simple", "title": title, "content": content}
+        self._response["card"] = card
         return self
 
-    def standard_card(self, title=None, text=None, small_image_url=None, large_image_url=None):
-        card = {
-            'type': 'Standard',
-            'title': title,
-            'text': text
-        }
+    def standard_card(
+        self, title=None, text=None, small_image_url=None, large_image_url=None
+    ):
+        card = {"type": "Standard", "title": title, "text": text}
 
         if any((small_image_url, large_image_url)):
-            card['image'] = {}
+            card["image"] = {}
         if small_image_url is not None:
-            card['image']['smallImageUrl'] = small_image_url
+            card["image"]["smallImageUrl"] = small_image_url
         if large_image_url is not None:
-            card['image']['largeImageUrl'] = large_image_url
+            card["image"]["largeImageUrl"] = large_image_url
 
-        self._response['card'] = card
+        self._response["card"] = card
         return self
-    
-    def list_display_render(self, template=None, title=None, backButton='HIDDEN', token=None, background_image_url=None, image=None, listItems=None, hintText=None):
+
+    def list_display_render(
+        self,
+        template=None,
+        title=None,
+        backButton="HIDDEN",
+        token=None,
+        background_image_url=None,
+        image=None,
+        listItems=None,
+        hintText=None,
+    ):
         directive = [
             {
-                'type': 'Display.RenderTemplate',
-                'template': {
-                    'type': template,
-                    'backButton': backButton,
-                    'title': title,
-                    'listItems': listItems
-                }
+                "type": "Display.RenderTemplate",
+                "template": {
+                    "type": template,
+                    "backButton": backButton,
+                    "title": title,
+                    "listItems": listItems,
+                },
             }
         ]
-        
+
         if background_image_url is not None:
-            directive[0]['template']['backgroundImage'] = {
-               'sources': [
-                   {'url': background_image_url}
-               ]
+            directive[0]["template"]["backgroundImage"] = {
+                "sources": [{"url": background_image_url}]
             }
 
         if hintText is not None:
-            hint = {
-                'type':'Hint',
-                'hint': {
-                    'type':"PlainText",
-                    'text': hintText
-                }
-            }
+            hint = {"type": "Hint", "hint": {"type": "PlainText", "text": hintText}}
             directive.append(hint)
-        self._response['directives'] = directive
+        self._response["directives"] = directive
         return self
 
-    def display_render(self, template=None, title=None, backButton='HIDDEN', token=None, background_image_url=None, image=None, text=None, hintText=None):
+    def display_render(
+        self,
+        template=None,
+        title=None,
+        backButton="HIDDEN",
+        token=None,
+        background_image_url=None,
+        image=None,
+        text=None,
+        hintText=None,
+    ):
         directive = [
             {
-                'type': 'Display.RenderTemplate',
-                'template': {
-                    'type': template,
-                    'backButton': backButton,
-                    'title': title,
-                    'textContent': text
-                }
+                "type": "Display.RenderTemplate",
+                "template": {
+                    "type": template,
+                    "backButton": backButton,
+                    "title": title,
+                    "textContent": text,
+                },
             }
         ]
-        
+
         if background_image_url is not None:
-            directive[0]['template']['backgroundImage'] = {
-               'sources': [
-                   {'url': background_image_url}
-               ]
+            directive[0]["template"]["backgroundImage"] = {
+                "sources": [{"url": background_image_url}]
             }
-        
+
         if image is not None:
-            directive[0]['template']['image'] = {
-                'sources': [
-                    {'url': image}
-                ]
-            }
-            
+            directive[0]["template"]["image"] = {"sources": [{"url": image}]}
+
         if token is not None:
-            directive[0]['template']['token'] = token
-            
+            directive[0]["template"]["token"] = token
+
         if hintText is not None:
-            hint = {
-                'type':'Hint',
-                'hint': {
-                    'type':"PlainText",
-                    'text': hintText
-                }
-            }
+            hint = {"type": "Hint", "hint": {"type": "PlainText", "text": hintText}}
             directive.append(hint)
 
-        self._response['directives'] = directive
+        self._response["directives"] = directive
         return self
 
     def link_account_card(self):
-        card = {'type': 'LinkAccount'}
-        self._response['card'] = card
+        card = {"type": "LinkAccount"}
+        self._response["card"] = card
         return self
 
     def consent_card(self, permissions):
-        card = {
-            'type': 'AskForPermissionsConsent',
-            'permissions': [permissions]
-        }
-        self._response['card'] = card
+        card = {"type": "AskForPermissionsConsent", "permissions": [permissions]}
+        self._response["card"] = card
         return self
 
     def render_response(self):
         response_wrapper = {
-            'version': '1.0',
-            'response': self._response,
-            'sessionAttributes': session.attributes
+            "version": "1.0",
+            "response": self._response,
+            "sessionAttributes": session.attributes,
         }
-        
+
         kw = {}
-        if hasattr(session, 'attributes_encoder'):
+        if hasattr(session, "attributes_encoder"):
             json_encoder = session.attributes_encoder
-            kwargname = 'cls' if inspect.isclass(json_encoder) else 'default'
+            kwargname = "cls" if inspect.isclass(json_encoder) else "default"
             kw[kwargname] = json_encoder
         dbgdump(response_wrapper, **kw)
 
@@ -183,87 +171,79 @@ class _Response(object):
 
 
 class statement(_Response):
-
     def __init__(self, speech):
         super(statement, self).__init__(speech)
-        self._response['shouldEndSession'] = True
+        self._response["shouldEndSession"] = True
 
 
 class question(_Response):
-
     def __init__(self, speech):
         super(question, self).__init__(speech)
-        self._response['shouldEndSession'] = False
+        self._response["shouldEndSession"] = False
 
     def reprompt(self, reprompt):
-        reprompt = {'outputSpeech': _output_speech(reprompt)}
-        self._response['reprompt'] = reprompt
+        reprompt = {"outputSpeech": _output_speech(reprompt)}
+        self._response["reprompt"] = reprompt
         return self
 
 
 class buy(_Response):
-
     def __init__(self, productId=None):
         self._response = {
-            'shouldEndSession': True,
-            'directives': [{
-              'type': 'Connections.SendRequest',
-              'name': 'Buy',          
-              'payload': {
-                         'InSkillProduct': {
-                             'productId': productId
-                         }
-               },
-              'token': 'correlationToken'              
-            }]
+            "shouldEndSession": True,
+            "directives": [
+                {
+                    "type": "Connections.SendRequest",
+                    "name": "Buy",
+                    "payload": {"InSkillProduct": {"productId": productId}},
+                    "token": "correlationToken",
+                }
+            ],
         }
 
 
 class refund(_Response):
-
     def __init__(self, productId=None):
         self._response = {
-            'shouldEndSession': True,
-            'directives': [{
-              'type': 'Connections.SendRequest',
-              'name': 'Cancel',          
-              'payload': {
-                         'InSkillProduct': {
-                             'productId': productId
-                         }
-               },
-              'token': 'correlationToken'              
-            }]
+            "shouldEndSession": True,
+            "directives": [
+                {
+                    "type": "Connections.SendRequest",
+                    "name": "Cancel",
+                    "payload": {"InSkillProduct": {"productId": productId}},
+                    "token": "correlationToken",
+                }
+            ],
         }
+
 
 class upsell(_Response):
-
     def __init__(self, productId=None, msg=None):
         self._response = {
-            'shouldEndSession': True,
-            'directives': [{
-              'type': 'Connections.SendRequest',
-              'name': 'Upsell',          
-              'payload': {
-                         'InSkillProduct': {
-                             'productId': productId
-                         },
-                         'upsellMessage': msg
-               },
-              'token': 'correlationToken'              
-            }]
+            "shouldEndSession": True,
+            "directives": [
+                {
+                    "type": "Connections.SendRequest",
+                    "name": "Upsell",
+                    "payload": {
+                        "InSkillProduct": {"productId": productId},
+                        "upsellMessage": msg,
+                    },
+                    "token": "correlationToken",
+                }
+            ],
         }
 
-class delegate(_Response):
 
+class delegate(_Response):
     def __init__(self, updated_intent=None):
         self._response = {
-            'shouldEndSession': False,
-            'directives': [{'type': 'Dialog.Delegate'}]
+            "shouldEndSession": False,
+            "directives": [{"type": "Dialog.Delegate"}],
         }
 
         if updated_intent:
-            self._response['directives'][0]['updatedIntent'] = updated_intent
+            self._response["directives"][0]["updatedIntent"] = updated_intent
 
 
 class elicit_slot(_Response):
@@ -276,16 +256,14 @@ class elicit_slot(_Response):
 
     def __init__(self, slot, speech, updated_intent=None):
         self._response = {
-            'shouldEndSession': False,
-            'directives': [{
-                'type': 'Dialog.ElicitSlot',
-                'slotToElicit': slot,
-            }],
-            'outputSpeech': _output_speech(speech),
+            "shouldEndSession": False,
+            "directives": [{"type": "Dialog.ElicitSlot", "slotToElicit": slot,}],
+            "outputSpeech": _output_speech(speech),
         }
 
         if updated_intent:
-            self._response['directives'][0]['updatedIntent'] = updated_intent
+            self._response["directives"][0]["updatedIntent"] = updated_intent
+
 
 class confirm_slot(_Response):
     """
@@ -297,33 +275,30 @@ class confirm_slot(_Response):
 
     def __init__(self, slot, speech, updated_intent=None):
         self._response = {
-            'shouldEndSession': False,
-            'directives': [{
-                'type': 'Dialog.ConfirmSlot',
-                'slotToConfirm': slot,
-            }],
-            'outputSpeech': _output_speech(speech),
+            "shouldEndSession": False,
+            "directives": [{"type": "Dialog.ConfirmSlot", "slotToConfirm": slot,}],
+            "outputSpeech": _output_speech(speech),
         }
 
         if updated_intent:
-            self._response['directives'][0]['updatedIntent'] = updated_intent
+            self._response["directives"][0]["updatedIntent"] = updated_intent
+
 
 class confirm_intent(_Response):
     """
     Sends a ConfirmIntent directive.
     
     """
+
     def __init__(self, speech, updated_intent=None):
         self._response = {
-            'shouldEndSession': False,
-            'directives': [{
-                'type': 'Dialog.ConfirmIntent',
-            }],
-            'outputSpeech': _output_speech(speech),
+            "shouldEndSession": False,
+            "directives": [{"type": "Dialog.ConfirmIntent",}],
+            "outputSpeech": _output_speech(speech),
         }
 
         if updated_intent:
-            self._response['directives'][0]['updatedIntent'] = updated_intent
+            self._response["directives"][0]["updatedIntent"] = updated_intent
 
 
 class audio(_Response):
@@ -346,80 +321,88 @@ class audio(_Response):
         return audio('Ok, stopping the audio').stop()
     """
 
-    def __init__(self, speech=''):
+    def __init__(self, speech=""):
         super(audio, self).__init__(speech)
         if not speech:
             self._response = {}
-        self._response['directives'] = []
+        self._response["directives"] = []
 
     def play(self, stream_url, offset=0, opaque_token=None):
         """Sends a Play Directive to begin playback and replace current and enqueued streams."""
 
-        self._response['shouldEndSession'] = True
-        directive = self._play_directive('REPLACE_ALL')
-        directive['audioItem'] = self._audio_item(stream_url=stream_url, offset=offset, opaque_token=opaque_token)
-        self._response['directives'].append(directive)
+        self._response["shouldEndSession"] = True
+        directive = self._play_directive("REPLACE_ALL")
+        directive["audioItem"] = self._audio_item(
+            stream_url=stream_url, offset=offset, opaque_token=opaque_token
+        )
+        self._response["directives"].append(directive)
         return self
 
     def enqueue(self, stream_url, offset=0, opaque_token=None):
         """Adds stream to the queue. Does not impact the currently playing stream."""
-        directive = self._play_directive('ENQUEUE')
-        audio_item = self._audio_item(stream_url=stream_url,
-                                      offset=offset,
-                                      push_buffer=False,
-                                      opaque_token=opaque_token)
-        audio_item['stream']['expectedPreviousToken'] = current_stream.token
+        directive = self._play_directive("ENQUEUE")
+        audio_item = self._audio_item(
+            stream_url=stream_url,
+            offset=offset,
+            push_buffer=False,
+            opaque_token=opaque_token,
+        )
+        audio_item["stream"]["expectedPreviousToken"] = current_stream.token
 
-        directive['audioItem'] = audio_item
-        self._response['directives'].append(directive)
+        directive["audioItem"] = audio_item
+        self._response["directives"].append(directive)
         return self
 
     def play_next(self, stream_url=None, offset=0, opaque_token=None):
         """Replace all streams in the queue but does not impact the currently playing stream."""
 
-        directive = self._play_directive('REPLACE_ENQUEUED')
-        directive['audioItem'] = self._audio_item(stream_url=stream_url, offset=offset, opaque_token=opaque_token)
-        self._response['directives'].append(directive)
+        directive = self._play_directive("REPLACE_ENQUEUED")
+        directive["audioItem"] = self._audio_item(
+            stream_url=stream_url, offset=offset, opaque_token=opaque_token
+        )
+        self._response["directives"].append(directive)
         return self
 
     def resume(self):
         """Sends Play Directive to resume playback at the paused offset"""
-        directive = self._play_directive('REPLACE_ALL')
-        directive['audioItem'] = self._audio_item()
-        self._response['directives'].append(directive)
+        directive = self._play_directive("REPLACE_ALL")
+        directive["audioItem"] = self._audio_item()
+        self._response["directives"].append(directive)
         return self
 
     def _play_directive(self, behavior):
         directive = {}
-        directive['type'] = 'AudioPlayer.Play'
-        directive['playBehavior'] = behavior
+        directive["type"] = "AudioPlayer.Play"
+        directive["playBehavior"] = behavior
         return directive
 
-    def _audio_item(self, stream_url=None, offset=0, push_buffer=True, opaque_token=None):
+    def _audio_item(
+        self, stream_url=None, offset=0, push_buffer=True, opaque_token=None
+    ):
         """Builds an AudioPlayer Directive's audioItem and updates current_stream"""
-        audio_item = {'stream': {}}
-        stream = audio_item['stream']
+        audio_item = {"stream": {}}
+        stream = audio_item["stream"]
 
         # existing stream
         if not stream_url:
             # stream.update(current_stream.__dict__)
-            stream['url'] = current_stream.url
-            stream['token'] = current_stream.token
-            stream['offsetInMilliseconds'] = current_stream.offsetInMilliseconds
+            stream["url"] = current_stream.url
+            stream["token"] = current_stream.token
+            stream["offsetInMilliseconds"] = current_stream.offsetInMilliseconds
 
         # new stream
         else:
-            stream['url'] = stream_url
-            stream['token'] = opaque_token or str(uuid.uuid4())
-            stream['offsetInMilliseconds'] = offset
+            stream["url"] = stream_url
+            stream["token"] = opaque_token or str(uuid.uuid4())
+            stream["offsetInMilliseconds"] = offset
 
         if push_buffer:  # prevents enqueued streams from becoming current_stream
-            push_stream(stream_cache, context['System']['user']['userId'], stream)
+            push_stream(stream_cache, context["System"]["user"]["userId"], stream)
         return audio_item
 
     def stop(self):
         """Sends AudioPlayer.Stop Directive to stop the current stream playback"""
-        self._response['directives'].append({'type': 'AudioPlayer.Stop'})
+        self._response["directives"].append({"type": "AudioPlayer.Stop"})
         return self
 
     def clear_queue(self, stop=False):
@@ -432,13 +415,13 @@ class audio(_Response):
         """
 
         directive = {}
-        directive['type'] = 'AudioPlayer.ClearQueue'
+        directive["type"] = "AudioPlayer.ClearQueue"
         if stop:
-            directive['clearBehavior'] = 'CLEAR_ALL'
+            directive["clearBehavior"] = "CLEAR_ALL"
         else:
-            directive['clearBehavior'] = 'CLEAR_ENQUEUED'
+            directive["clearBehavior"] = "CLEAR_ENQUEUED"
 
-        self._response['directives'].append(directive)
+        self._response["directives"].append(directive)
         return self
 
 
@@ -453,8 +436,8 @@ def _copyattr(src, dest, attr, convert=None):
 def _output_speech(speech):
     try:
         xmldoc = ElementTree.fromstring(speech)
-        if xmldoc.tag == 'speak':
-            return {'type': 'SSML', 'ssml': speech}
+        if xmldoc.tag == "speak":
+            return {"type": "SSML", "ssml": speech}
     except (UnicodeEncodeError, ElementTree.ParseError) as e:
         pass
-    return {'type': 'PlainText', 'text': speech}
+    return {"type": "PlainText", "text": speech}
